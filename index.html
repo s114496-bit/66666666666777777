@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心願便利貼</title>
+    <style>
+        :root {
+            --primary-color: #ff7675;
+            --secondary-color: #ffeaa7;
+            --bg-color: #f7f1e3;
+            --text-color: #2c3e50;
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft JhengHei', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* 標題區 */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #ff7675 0%, #ffb8b8 100%);
+            color: white;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            letter-spacing: 2px;
+        }
+
+        /* 暱稱輸入彈窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .modal-box h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+
+        .modal-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #fab1a0;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            background-color: #e84393;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #74b9ff;
+        }
+        .btn-secondary:hover {
+            background-color: #0984e3;
+        }
+
+        /* 引導區語句 */
+        .intro-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: var(--card-shadow);
+            text-align: center;
+            border-left: 6px solid var(--primary-color);
+        }
+
+        .intro-section h2 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        /* 發表留言區 */
+        .form-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: var(--card-shadow);
+            display: none;
+        }
+
+        .form-section h3 {
+            margin-bottom: 15px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 2px solid #ffeaa7;
+            border-radius: 8px;
+            resize: vertical;
+            margin-bottom: 15px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .form-action-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* 留言列表 */
+        .empty-tips {
+            text-align: center;
+            padding: 50px;
+            background: #fffdf9;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            color: #b2bec3;
+            border: 3px dashed #ffeaa7;
+        }
+
+        .note-card {
+            background: #fffdf0; /* 便利貼淡黃色 */
+            padding: 25px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            box-shadow: 2px 4px 10px rgba(0,0,0,0.08);
+            position: relative;
+            border-top: 20px solid #ffeaa7; /* 便利貼頂部膠帶感 */
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            border-bottom: 1px dashed #ffeaa7;
+            padding-bottom: 5px;
+        }
+
+        .author-name {
+            font-weight: bold;
+            color: #e17055;
+        }
+
+        .note-content {
+            font-size: 1.1rem;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+            word-wrap: break-word;
+        }
+
+        /* 按鈕與表情列 */
+        .note-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .emoji-btn {
+            background: white;
+            border: 1px solid #ffeaa7;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .emoji-btn:hover {
+            background-color: #ffeaa7;
+            transform: scale(1.1);
+        }
+
+        .reply-toggle-btn {
+            background: none;
+            border: none;
+            color: #0984e3;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: auto;
+        }
+
+        /* 回覆區區塊 */
+        .replies-box {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .reply-item {
+            padding: 8px 0;
+            border-bottom: 1px dotted #ccc;
+            font-size: 0.95rem;
+        }
+        .reply-item:last-child {
+            border-bottom: none;
+        }
+
+        .reply-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .reply-form input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        /* 影片播放覆蓋層 (特殊情境) */
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 80%;
+            max-width: 700px;
+            padding-bottom: 45%; /* 16:9 比例 */
+            height: 0;
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        .close-video-btn {
+            margin-top: 20px;
+            background-color: #ff7675;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="nicknameModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>歡迎來到心願便利貼 ✨</h3>
+            <p style="margin-bottom: 15px; color: #636e72;">請先給自己取一個溫暖的暱稱，準備貼上你的心願吧！</p>
+            <input type="text" id="nicknameInput" placeholder="輸入您的暱稱..." maxlength="12">
+            <button class="btn" onclick="saveNickname()">進入便利貼牆</button>
+        </div>
+    </div>
+
+    <div id="videoModal" class="video-overlay hidden">
+        <div style="color: white; margin-bottom: 15px; font-size: 1.2rem; font-weight: bold;">✨ 觸發了67 ✨</div>
+        <div class="video-wrapper">
+            <iframe id="ytPlayer" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+        <button class="close-video-btn" onclick="closeVideo()">關閉彩蛋影片</button>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>心願便利貼 📌</h1>
+            <p>一天一天貼近你的心</p>
+        </header>
+
+        <section class="intro-section">
+            <h2 id="welcomeGreeting">嗨！歡迎來到這裡 🌸</h2>
+            <p id="guideDescription">每一個貼在這裡的心願，都是一抹溫暖的光。你現在想做什麼呢？</p>
+            <div class="action-btns">
+                <button class="btn" onclick="showPostForm()">✍️ 我要發布心願</button>
+                <button class="btn btn-secondary" onclick="scrollToBoard()">🔍 翻看大家的心願</button>
+            </div>
+        </section>
+
+        <section id="postFormSection" class="form-section">
+            <h3>寫下你的心願便利貼</h3>
+            <textarea id="messageTextArea" placeholder="在這裡寫下你想說的話... (所有人都能看見喔)"></textarea>
+            <div class="form-action-bar">
+                <button class="btn" style="background-color: #b2bec3;" onclick="hidePostForm()">取消</button>
+                <button class="btn" onclick="submitMessage()">貼上留言牆</button>
+            </div>
+        </section>
+
+        <section id="boardSection">
+            </section>
+    </div>
+
+    <script>
+        // 初始化全域變數與儲存結構
+        // messages = [{ id, username, content, timestamp, emojis: {'❤️':0...}, replies: [{username, content, timestamp}] }]
+        let messages = [];
+        let currentNickname = "";
+
+        // 定義可供點擊的反應 Emoji 清單
+        const allowedEmojis = ['❤️', '👍', '✨', '🥺', '🎉'];
+
+        // 頁面載入初始化
+        window.onload = function() {
+            // 從 LocalStorage 抓取歷史進度
+            const storedData = localStorage.getItem('wish_board_messages');
+            if (storedData) {
+                messages = JSON.parse(storedData);
+            }
+
+            const storedName = localStorage.getItem('wish_board_user');
+            if (storedName) {
+                currentNickname = storedName;
+                document.getElementById('nicknameModal').classList.add('hidden');
+                updateGuideTexts();
+            }
+            
+            renderBoard();
+        };
+
+        // 儲存暱稱
+        function saveNickname() {
+            const name = document.getElementById('nicknameInput').value.trim();
+            if (!name) {
+                alert('請先輸入一個暱稱再出發喔！');
+                return;
+            }
+            currentNickname = name;
+            localStorage.setItem('wish_board_user', currentNickname);
+            document.getElementById('nicknameModal').classList.add('hidden');
+            updateGuideTexts();
+        }
+
+        // 動態變更引導語句
+        function updateGuideTexts() {
+            document.getElementById('welcomeGreeting').innerText = `哈囉，${currentNickname}！ 😊`;
+            document.getElementById('guideDescription').innerText = `挑選一張便利貼，寫下心願吧！你發布的言論所有人都看得見，也能對別人進行回覆哦。`;
+        }
+
+        // 顯示/隱藏發表表單
+        function showPostForm() {
+            document.getElementById('postFormSection').style.display = 'block';
+            document.getElementById('messageTextArea').focus();
+            document.getElementById('postFormSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hidePostForm() {
+            document.getElementById('postFormSection').style.display = 'none';
+            document.getElementById('messageTextArea').value = '';
+        }
+
+        function scrollToBoard() {
+            document.getElementById('boardSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 儲存進度並重新整理畫面
+        function saveAndRefresh() {
+            localStorage.setItem('wish_board_messages', JSON.stringify(messages));
+            renderBoard();
+        }
+
+        // 發布新留言
+        function submitMessage() {
+            const content = document.getElementById('messageTextArea').value.trim();
+            if (!content) {
+                alert('便利貼上還沒有寫字喔！請輸入一些內容。');
+                return;
+            }
+
+            // 特殊情境檢查：正則表達式不區分大小寫檢查 "67", "six seven", "六七"
+            const regex = /67|six\s+seven|六七/i;
+            if (regex.test(content)) {
+                triggerVideo();
+            }
+
+            // 初始化 Emoji 計數器
+            const emojiObject = {};
+            allowedEmojis.forEach(em => emojiObject[em] = []); // 儲存點擊該 emoji 的人暱稱清單
+
+            // 建立新資料物件
+            const newWish = {
+                id: Date.now(),
+                username: currentNickname,
+                content: content,
+                timestamp: new Date().toLocaleString(),
+                emojis: emojiObject,
+                replies: []
+            };
+
+            messages.unshift(newWish); // 新留言排序在最上方
+            hidePostForm();
+            saveAndRefresh();
+        }
+
+        // 特殊情境：啟動 YouTube 影片播放
+        function triggerVideo() {
+            const videoModal = document.getElementById('videoModal');
+            const ytPlayer = document.getElementById('ytPlayer');
+            // 帶入自動播放參數 (autoplay=1)
+            ytPlayer.src = "https://www.youtube.com/embed/L7ejl_Hj3A8?autoplay=1";
+            videoModal.classList.remove('hidden');
+        }
+
+        // 關閉影片
+        function closeVideo() {
+            const videoModal = document.getElementById('videoModal');
+            const ytPlayer = document.getElementById('ytPlayer');
+            ytPlayer.src = ""; // 清空網址停止播放
+            videoModal.classList.add('hidden');
+        }
+
+        // Emoji 反應點擊處理
+        function handleEmojiClick(msgId, emoji) {
+            const msg = messages.find(m => m.id === msgId);
+            if (msg) {
+                // 為了好顯示是誰回應的，如果這個人沒點過就放進去，點過就取消(或重覆累加，這裡採用計數機制加入暱稱)
+                if (!msg.emojis[emoji]) {
+                    msg.emojis[emoji] = [];
+                }
+                msg.emojis[emoji].push(currentNickname);
+                saveAndRefresh();
+            }
+        }
+
+        // 發表回覆
+        function submitReply(event, msgId) {
+            event.preventDefault();
+            const replyInput = document.getElementById(`reply-input-${msgId}`);
+            const replyText = replyInput.value.trim();
+
+            if (!replyText) {
+                alert('回覆內容不能是空的唷！');
+                return;
+            }
+
+            // 特殊情境檢查 (回覆若包含關鍵字也觸發影片)
+            const regex = /67|six\s+seven|六七/i;
+            if (regex.test(replyText)) {
+                triggerVideo();
+            }
+
+            const msg = messages.find(m => m.id === msgId);
+            if (msg) {
+                msg.replies.push({
+                    username: currentNickname,
+                    content: replyText,
+                    timestamp: new Date().toLocaleString()
+                });
+                replyInput.value = '';
+                saveAndRefresh();
+            }
+        }
+
+        // 切換顯示回覆盒
+        function toggleReplyBox(msgId) {
+            const box = document.getElementById(`reply-box-${msgId}`);
+            box.classList.toggle('hidden');
+        }
+
+        // 主要功能：渲染留言板
+        function renderBoard() {
+            const board = document.getElementById('boardSection');
+            board.innerHTML = '';
+
+            // 檢查是否無留言
+            if (messages.length === 0) {
+                board.innerHTML = `
+                    <div class="empty-tips">
+                        📌 目前尚無留言，你來發表吧！
+                    </div>
+                `;
+                return;
+            }
+
+            // 走訪所有留言產生 HTML
+            messages.forEach(msg => {
+                
+                // 1. 生成 Emoji 按鈕區
+                let emojiHtml = '';
+                allowedEmojis.forEach(em => {
+                    const clickers = msg.emojis[em] || [];
+                    const count = clickers.length;
+                    // 滑鼠懸停可以看是誰按的
+                    const titleStr = count > 0 ? `按過的人: ${[...new Set(clickers)].join(', ')}` : '點擊給予回應';
+                    emojiHtml += `
+                        <button class="emoji-btn" title="${titleStr}" onclick="handleEmojiClick(${msg.id}, '${em}')">
+                            ${em} ${count > 0 ? count : ''}
+                        </button>
+                    `;
+                });
+
+                // 2. 生成回覆列表
+                let repliesHtml = '';
+                if (msg.replies && msg.replies.length > 0) {
+                    msg.replies.forEach(rep => {
+                        repliesHtml += `
+                            <div class="reply-item">
+                                <span class="author-name">💬 ${rep.username}</span>: 
+                                <span>${rep.content}</span>
+                                <span style="font-size:11px; color:#95a5a6; margin-left:10px;">(${rep.timestamp})</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    repliesHtml = `<p style="color:#b2bec3; font-size:13px;">目前還沒有人心貼心回覆...</p>`;
+                }
+
+                // 3. 組合出整張卡片
+                const card = document.createElement('div');
+                card.className = 'note-card';
+                card.innerHTML = `
+                    <div class="note-header">
+                        <span>由 <span class="author-name">${msg.username}</span> 悄悄貼上</span>
+                        <span>🕒 ${msg.timestamp}</span>
+                    </div>
+                    <div class="note-content">${msg.content}</div>
+                    
+                    <div class="note-actions">
+                        ${emojiHtml}
+                        <button class="reply-toggle-btn" onclick="toggleReplyBox(${msg.id})">
+                            留言回覆 (${msg.replies ? msg.replies.length : 0})
+                        </button>
+                    </div>
+
+                    <div id="reply-box-${msg.id}" class="replies-box hidden">
+                        <div style="margin-bottom: 10px;">${repliesHtml}</div>
+                        <form class="reply-form" onsubmit="submitReply(event, ${msg.id})">
+                            <input type="text" id="reply-input-${msg.id}" placeholder="以 ${currentNickname} 的名義回覆..." maxlength="80">
+                            <button type="submit" class="btn" style="padding:6px 15px; font-size:14px;">傳送</button>
+                        </form>
+                    </div>
+                `;
+                board.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
